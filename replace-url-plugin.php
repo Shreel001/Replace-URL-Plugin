@@ -8,9 +8,18 @@
 // Function to replace substrings in content
 function replace_substring_on_the_fly($content) {
 
+    global $post;
+
+    // Check if the flag is set in post meta
+    $processed_once = get_post_meta($post->ID, '_post_processed_once', true);
+
+    if ($processed_once === 'true') {
+        return $content; // Skip processing if already processed
+    }
+
     $search_pattern = '/https?:\/\/catalogue\.library\.(torontomu|ryerson)\.ca\/record=b[0-9]{7}' . '(~S0)?/';
 
-    if(!preg_match_all($search_pattern, $content, $matches)){
+    if(!preg_match($search_pattern, $content, $matches)){
         return $content;
     }
 
@@ -45,15 +54,14 @@ function replace_substring_on_the_fly($content) {
                 $original_url = $match[0];
                 $replace_url = $str2;
 
-                // Log the match for debugging
-                error_log("Original URL: $original_url");
-                error_log("Replace URL: $replace_url");
-
                 // Replace the content using str_replace
                 $content = str_replace($original_url, $replace_url, $content);
             }
         }
     }
+
+    // Set flag in post meta to indicate content has been processed
+    update_post_meta($post->ID, '_post_processed_once', 'true');
 
     // Return the modified content
     return $content;
